@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Plugin.Maui.PeerVideoCall</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --bg: #ffffff;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --success: #16a34a;
+            --danger: #dc2626;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
+            overflow: hidden;
+        }
+
+        .container {
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        header {
+            padding: 20px 0;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 5px;
+        }
+
+            .status-badge.online {
+                color: var(--success);
+                border-color: rgba(34, 197, 94, 0.3);
+            }
+
+            .status-badge.offline {
+                color: var(--danger);
+                border-color: rgba(239, 68, 68, 0.3);
+            }
+
+        .video-grid {
+            flex: 1;
+            display: grid;
+            gap: 2px;
+            position: relative;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #local-video-container {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+
+            touch-action: none;
+
+            background: #1e293b;
+            overflow: hidden;
+        }
+
+
+        .video-grid.idle-mode #local-video-container {
+            width: 100% !important;
+            height: 100% !important;
+            top: 0 !important;
+            left: 0 !important;
+            border-radius: 0;
+            position: relative;
+        }
+
+
+        .video-grid.in-call #local-video-container {
+            position: absolute;
+            width: 110px;
+            height: 160px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: grab;
+        }
+
+            .video-grid.in-call #local-video-container:active {
+                cursor: grabbing;
+                transition: none;
+            }
+
+        .video-grid.in-call {
+            grid-template-columns: 1fr;
+            grid-auto-rows: 1fr;
+        }
+
+            .video-grid.in-call.multi-user {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+        @media (max-width: 600px) and (orientation: portrait) {
+            .video-grid.in-call.multi-user {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .video-wrapper {
+            position: relative;
+            background: #1e293b;
+            overflow: hidden;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .video-label {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            color: white;
+            z-index: 5;
+            backdrop-filter: blur(4px);
+        }
+
+        .controls-overlay {
+            background: #f8fafc;
+            padding-top: 15px;
+            padding-bottom: 25px;
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            z-index: 1100;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-circle {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            background: #f1f5f9;
+            color: #1e293b;
+            cursor: pointer;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+            .btn-circle.active {
+                background: var(--primary);
+                color: white;
+            }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+            .btn-danger:active {
+                background: #dc2626;
+            }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header style="display: none;">
+            <div id="status">Connecting...</div>
+        </header>
+
+        <div id="video-grid" class="video-grid idle-mode">
+            <div class="video-wrapper" id="local-video-container">
+                <video id="local-video" autoplay muted playsinline></video>
+                <div class="video-label">You</div>
+            </div>
+        </div>
+
+        <div class="controls-overlay">
+            <button id="mic-btn" class="btn-circle" onclick="toggleAudio()" title="Mic">🎤</button>
+            <button id="cam-btn" class="btn-circle" onclick="toggleVideo()" title="Camera">📸</button>
+            <button class="btn-circle btn-danger" onclick="DropCall()" title="End">📞</button>
+        </div>
+    </div>
+
+
+    <script>
+        let peer;
+        let localStream;
+        let calls = new Map(); 
+        let peerNames = new Map();
+        let SwitchedOff = false;
+
+        const videoGrid = document.getElementById('video-grid');
+        const statusBadge = document.getElementById('status');
+        const myIdDisplay = document.getElementById('my-id');
+        const localVideo = document.getElementById('local-video');
+        let logBuffer = [];
+        function log(msg) {
+            const timestamp = new Date().toLocaleTimeString();
+            const formatted = `[${timestamp}] ${msg}`;
+            console.log(formatted);
+            logBuffer.push(formatted);
+            if (logBuffer.length > 100) logBuffer.shift();
+        }
+
+        window.GetConnectionID = function () {
+            return peer ? peer.id : null;
+        };
+
+        window.IsCallConnected = function () {
+            return calls.size > 0;
+        };
+
+        window.GetPeerIDsInCall = function () {
+            return JSON.stringify(Array.from(calls.keys()));
+        };
+
+        window.RetrieveLogs = function () {
+            return JSON.stringify(logBuffer);
+        };
+
+        window.SetName = function (name, peerId) {
+            peerNames.set(peerId, name);
+            const label = document.querySelector(`#wrapper-${peerId} .video-label`);
+            if (label) {
+                label.textContent = name;
+            }
+        };
+
+        window.InjectCSS = function (cssString) {
+            const style = document.createElement('style');
+            style.textContent = cssString;
+            document.head.appendChild(style);
+        };
+
+        window.InjectJavaScript = function (jsString) {
+            try {
+                const script = document.createElement('script');
+                script.textContent = jsString;
+                document.head.appendChild(script);
+                log('Custom JavaScript injected and executed.');
+            } catch (err) {
+                log(`JS Injection Error: ${err.message}`);
+            }
+        };
+
+        let mediaPromise = null;
+        async function acquireMedia() {
+            if (mediaPromise) return mediaPromise;
+            mediaPromise = (async () => {
+                try {
+                    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                    localVideo.srcObject = localStream;
+                    log('Local media acquired');
+                    return localStream;
+                } catch (err) {
+                    log(`Media Error: ${err.message}`);
+                    statusBadge.innerText = 'Media Blocked';
+                    statusBadge.className = 'status-badge offline';
+                    throw err;
+                }
+            })();
+            return mediaPromise;
+        }
+
+        window.Initialise = async function (configJson) {
+            try {
+                await acquireMedia();
+                const config = configJson ? (typeof configJson === 'string' ? JSON.parse(configJson) : configJson) : null;
+                log('Peer initialization requested...');
+
+                if (peer) {
+                    peer.destroy();
+                }
+
+                initPeer(config);
+            } catch (err) {
+                log(`Initialise Error: ${err.message}`);
+            }
+        };
+
+        function refreshLayout() {
+            const remoteCount = calls.size;
+            videoGrid.className = 'video-grid';
+
+            if (remoteCount === 0) {
+                videoGrid.classList.add('idle-mode');
+                log('Layout: Idle');
+            } else {
+                videoGrid.classList.add('in-call');
+                if (remoteCount > 1) {
+                    videoGrid.classList.add('multi-user');
+                }
+                log(`Layout: In-Call (${remoteCount} peers)`);
+            }
+        }
+
+        const pip = document.getElementById('local-video-container');
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+        let xOffset = 0;
+        let yOffset = 0;
+
+        pip.addEventListener('mousedown', dragStart);
+        pip.addEventListener('touchstart', dragStart, { passive: false });
+        window.addEventListener('mousemove', drag);
+        window.addEventListener('touchmove', drag, { passive: false });
+        window.addEventListener('mouseup', dragEnd);
+        window.addEventListener('touchend', dragEnd);
+
+        function dragStart(e) {
+            if (!videoGrid.classList.contains('in-call')) return;
+
+            if (e.type === 'touchstart') {
+                initialX = e.touches[0].clientX - xOffset;
+                initialY = e.touches[0].clientY - yOffset;
+            } else {
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+            }
+
+            if (e.target === pip || pip.contains(e.target)) {
+                isDragging = true;
+            }
+        }
+
+        function drag(e) {
+            if (isDragging) {
+                e.preventDefault();
+                if (e.type === 'touchmove') {
+                    currentX = e.touches[0].clientX - initialX;
+                    currentY = e.touches[0].clientY - initialY;
+                } else {
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                }
+
+                xOffset = currentX;
+                yOffset = currentY;
+                setTranslate(currentX, currentY, pip);
+            }
+        }
+
+        function dragEnd(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            snapToCorner();
+        }
+
+        function setTranslate(xPos, yPos, el) {
+            el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
+        }
+
+        function snapToCorner() {
+            const rect = pip.getBoundingClientRect();
+            const gridRect = videoGrid.getBoundingClientRect();
+
+            const midX = gridRect.left + gridRect.width / 2;
+            const midY = gridRect.top + gridRect.height / 2;
+
+            const pipMidX = rect.left + rect.width / 2;
+            const pipMidY = rect.top + rect.height / 2;
+
+            const padding = 15;
+
+            let targetX, targetY;
+
+            if (pipMidX < midX) {
+                targetX = padding;
+            } else {
+                targetX = gridRect.width - rect.width - padding;
+            }
+
+            if (pipMidY < midY) {
+                targetY = padding;
+            } else {
+                targetY = gridRect.height - rect.height - padding;
+            }
+
+            targetX = Math.max(padding, Math.min(targetX, gridRect.width - rect.width - padding));
+            targetY = Math.max(padding, Math.min(targetY, gridRect.height - rect.height - padding));
+
+            pip.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            pip.style.transform = 'translate3d(0, 0, 0)';
+            pip.style.left = targetX + 'px';
+            pip.style.top = targetY + 'px';
+
+            xOffset = 0;
+            yOffset = 0;
+        }
+
+        window.DropCall = function () {
+            log('Dropping all calls...');
+            calls.forEach(call => call.close());
+            calls.clear();
+
+            const remoteWrappers = document.querySelectorAll('.remote-wrapper');
+            remoteWrappers.forEach(el => el.remove());
+
+            refreshLayout();
+            updateStatusText();
+
+            SwitchOff();
+        };
+
+        window.AddConnectionIDToCall = async function (partnerId) {
+            if (!peer) {
+                log('App not initialised. Auto-initialising...');
+                await window.Initialise();
+            }
+            if (!partnerId || partnerId === peer.id || calls.has(partnerId)) return;
+
+            await acquireMedia();
+
+            log(`Initiating call to ${partnerId}...`);
+            const call = peer.call(partnerId, localStream);
+            if (call) {
+                setupCallHandlers(call);
+            }
+        };
+
+        window.SwitchOff = function () {
+            document.body.innerHTML = "";
+            document.body.style.backgroundColor = "black";
+            document.body.style.margin = "0";
+            document.body.style.height = "100vh";
+            document.body.style.display = "flex";
+            document.body.style.justifyContent = "center";
+            document.body.style.alignItems = "center";
+
+            const message = document.createElement("div");
+            message.textContent = "Switched Off";
+            message.style.color = "white";
+            message.style.fontSize = "3rem";
+            message.style.fontFamily = "Arial, sans-serif";
+            message.style.textAlign = "center";
+
+            document.body.appendChild(message);
+
+            SwitchedOff = true;
+
+            log("Switched Off");
+        };
+
+        window.IsSwitchedOff = function () {
+            return SwitchedOff;
+        };
+
+        window.SwitchOn = function () {
+            location.reload();
+        };
+
+        window.ClickVideo = function () { toggleVideo(); };
+
+        window.ClickMic = function () { toggleAudio(); };
+
+        function initPeer(customOptions = null) {
+            const defaultOptions = {
+                debug: 2
+            };
+
+            const options = customOptions || defaultOptions;
+            peer = new Peer(options);
+
+            peer.on('open', (id) => {
+                log(`Connected to signaling server. ID: ${id}`);
+                myIdDisplay.innerText = id;
+                updateStatusText();
+            });
+
+            peer.on('call', (call) => {
+                log(`Incoming call from ${call.peer}. Auto-accepting...`);
+                call.answer(localStream);
+                setupCallHandlers(call);
+            });
+
+            peer.on('error', (err) => {
+                log(`Peer Error: ${err.type}`);
+                updateStatusText(err.type);
+            });
+
+            peer.on('disconnected', () => {
+                log('Disconnected from server. Reconnecting...');
+                peer.reconnect();
+            });
+        }
+
+        function setupCallHandlers(call) {
+            const peerId = call.peer;
+            calls.set(peerId, call);
+            refreshLayout();
+            updateStatusText();
+
+            call.on('stream', (remoteStream) => {
+                log(`Stream received from ${peerId}`);
+                addRemoteVideo(peerId, remoteStream);
+            });
+
+            call.on('close', () => {
+                log(`Call with ${peerId} closed`);
+                removeRemoteVideo(peerId);
+                calls.delete(peerId);
+                refreshLayout();
+                updateStatusText();
+            });
+
+            call.on('error', (err) => {
+                log(`Call Error (${peerId}): ${err}`);
+                removeRemoteVideo(peerId);
+                calls.delete(peerId);
+                refreshLayout(); 
+                updateStatusText();
+            });
+        }
+
+        function addRemoteVideo(peerId, stream) {
+            if (document.getElementById(`wrapper-${peerId}`)) return;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'video-wrapper remote-wrapper';
+            wrapper.id = `wrapper-${peerId}`;
+
+            const video = document.createElement('video');
+            video.id = `video-${peerId}`;
+            video.autoplay = true;
+            video.playsInline = true;
+            video.srcObject = stream;
+
+            const label = document.createElement('div');
+            label.className = 'video-label';
+            label.textContent = peerNames.has(peerId) ? peerNames.get(peerId) : `Peer: ${peerId.substring(0, 5)}...`;
+
+            wrapper.appendChild(video);
+            wrapper.appendChild(label);
+            videoGrid.appendChild(wrapper);
+            refreshLayout();
+        }
+
+        function removeRemoteVideo(peerId) {
+            const wrapper = document.getElementById(`wrapper-${peerId}`);
+            if (wrapper) wrapper.remove();
+            refreshLayout();
+        }
+
+        function updateStatusText(errorType) {
+            if (errorType) {
+                statusBadge.innerText = `Error: ${errorType}`;
+                statusBadge.className = 'status-badge offline';
+                return;
+            }
+
+            if (calls.size > 0) {
+                statusBadge.innerText = `In Call (${calls.size} active)`;
+                statusBadge.className = 'status-badge online';
+            } else if (peer && peer.id) {
+                statusBadge.innerText = 'Online & Ready';
+                statusBadge.className = 'status-badge online';
+            } else {
+                statusBadge.innerText = 'Connecting...';
+                statusBadge.className = 'status-badge offline';
+            }
+        }
+
+        function toggleAudio() {
+            const track = localStream.getAudioTracks()[0];
+            track.enabled = !track.enabled;
+            document.getElementById('mic-btn').classList.toggle('active', !track.enabled);
+        }
+
+        function toggleVideo() {
+            const track = localStream.getVideoTracks()[0];
+            track.enabled = !track.enabled;
+            document.getElementById('cam-btn').classList.toggle('active', !track.enabled);
+        }
+    </script>
+</body>
+
+</html>
