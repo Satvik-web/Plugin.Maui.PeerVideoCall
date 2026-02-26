@@ -147,6 +147,7 @@ string customFunction = @"
       if (video) {
           video.style.borderColor = data.color;
       }
+      return "Some stuff";
     };
 ";
 
@@ -163,9 +164,14 @@ var settings = new {
     color = "red" 
 };
 
-await VideoCallView.RunJavaScript("SetBorderColor", settings);
+string ReturnedValue = await VideoCallView.RunJavaScript("SetBorderColor", settings); // ReturnedValue will be set as "Some Stuff".
 ```
 
+Funtions which doesn't require any parameters can be run by the following.
+```csharp
+await VideoCallView.RunJavaScript("SomeFunction");
+```
+Note: Do not include paranthesis. And all parameters should be passed through in a similar manner as the given example, else it might fail.
 # Turning the View Off
 To safetly turn the full view off without disposing it the following can be used.
 
