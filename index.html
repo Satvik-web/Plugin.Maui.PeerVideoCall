@@ -241,7 +241,6 @@
 
         const videoGrid = document.getElementById('video-grid');
         const statusBadge = document.getElementById('status');
-        const myIdDisplay = document.getElementById('my-id');
         const localVideo = document.getElementById('local-video');
         let logBuffer = [];
         function log(msg) {
@@ -516,7 +515,6 @@
 
             peer.on('open', (id) => {
                 log(`Connected to signaling server. ID: ${id}`);
-                myIdDisplay.innerText = id;
                 updateStatusText();
             });
 
@@ -626,5 +624,6 @@
         }
     </script>
 </body>
+
 
 </html>
