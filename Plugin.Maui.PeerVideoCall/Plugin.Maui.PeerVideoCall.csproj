@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<PackageId>Plugin.Maui.PeerVideoCall</PackageId>
-		<Version>1.0.0</Version>
+		<Version>2.0.0</Version>
 		<Authors>Satvik Rajnarayanan</Authors>
 		<Title>WebRTC PeerVideoCall for .NET MAUI</Title>
 		<Description>A WebRTC video calling library for .NET MAUI using PeerJS. Easily integrate P2P video calls into your cross-platform apps.</Description>
@@ -55,3 +55,4 @@
 	</ItemGroup>
 
 </Project>
+
