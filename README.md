@@ -4,7 +4,10 @@ A lightweight, high-performance .NET MAUI Package for Peer-to-Peer (P2P) video c
 
 The Packgage uses the index.html from this repository for Video Calling
 
+<img width="778" height="778" alt="icon" src="https://github.com/user-attachments/assets/6b26513f-065d-4c10-8ac3-2126fbb36afe" />
 Install from: https://www.nuget.org/packages/Plugin.Maui.PeerVideoCall/
+
+NOTE: Version 1.0.0 is obsolete use Version 2.0.0 instead
 
 # Setup Permissions
 
@@ -35,7 +38,8 @@ Add the following lines to your Info.plist
 
 # Prerequisites
 1. Add the namespace to your xaml page.
-```xaml
+```xaml<img width="778" height="778" alt="icon" src="https://github.com/user-attachments/assets/ed6868a1-49b1-4b6f-9212-f43fdc7affed" />
+
 xmlns:rtc="clr-namespace:Plugin.Maui.PeerVideoCall;assembly=Plugin.Maui.PeerVideoCall"
 ```
 
