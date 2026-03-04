@@ -7,6 +7,7 @@
     <title>Plugin.Maui.PeerVideoCall</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet">
     <style>
         :root {
             --primary: #FF0000;
@@ -96,7 +97,7 @@
 
             touch-action: none;
 
-            background: #1e293b;
+            background: #141414;
             overflow: hidden;
         }
 
@@ -143,7 +144,7 @@
 
         .video-wrapper {
             position: relative;
-            background: #1e293b;
+            background: #141414;
             overflow: hidden;
         }
 
@@ -167,7 +168,7 @@
         }
 
         .controls-overlay {
-            background: #f8fafc;
+            background: #141414;
             padding-top: 15px;
             padding-bottom: 25px;
             display: flex;
@@ -200,13 +201,23 @@
             }
 
         .btn-danger {
-            background: #ef4444;
+            background: #FF0000;
             color: white;
         }
 
             .btn-danger:active {
-                background: #dc2626;
+                background: #FF0000;
             }
+        
+        .material-symbols-rounded {
+            font-family: 'Material Symbols Rounded';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            display: inline-block;
+            white-space: nowrap;
+        }
     </style>
 </head>
 
@@ -225,9 +236,12 @@
         </div>
 
         <div class="controls-overlay">
-            <button id="mic-btn" class="btn-circle" onclick="toggleAudio()" title="Mic">🎤</button>
-            <button id="cam-btn" class="btn-circle" onclick="toggleVideo()" title="Camera">📸</button>
-            <button class="btn-circle btn-danger" onclick="DropCall()" title="End">📞</button>
+            <button id="mic-btn" class="btn-circle" onclick="toggleAudio()" title="Mic"><span
+                    class="material-symbols-rounded">mic</span></button>
+            <button id="cam-btn" class="btn-circle" onclick="toggleVideo()" title="Camera"><span
+                    class="material-symbols-rounded">videocam</span></button>
+            <button class="btn-circle btn-danger" onclick="DropCall()" title="End"><span
+                    class="material-symbols-rounded">call_end</span></button>
         </div>
     </div>
 
@@ -615,16 +629,21 @@
             const track = localStream.getAudioTracks()[0];
             track.enabled = !track.enabled;
             document.getElementById('mic-btn').classList.toggle('active', !track.enabled);
+            const icon = document.getElementById('mic-btn').querySelector("span");
+            icon.textContent = track.enabled ? "mic" : "mic_off";
         }
 
         function toggleVideo() {
             const track = localStream.getVideoTracks()[0];
             track.enabled = !track.enabled;
             document.getElementById('cam-btn').classList.toggle('active', !track.enabled);
+            const icon = document.getElementById('cam-btn').querySelector("span");
+            icon.textContent = track.enabled ? "videocam" : "videocam_off";
         }
     </script>
 </body>
 
 
 </html>
+
 
