@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="VideoCall.MainPage">
+
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,0"
+            Spacing="25">
+            <Button x:Name="Chk_Permit" Text="Check Permissions" Clicked="Chk_Permit_Clicked"/>
+            <Label x:Name="Status_Label" TextColor="Red" FontAttributes="Bold" FontSize="Header" />
+            <Button x:Name="Caller_Btn" Text="Video Call" Clicked="Caller_Btn_Clicked" IsEnabled="False"/>
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

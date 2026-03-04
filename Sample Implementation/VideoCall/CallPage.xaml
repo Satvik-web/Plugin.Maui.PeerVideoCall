@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="VideoCall.CallPage"
+             xmlns:rtc="clr-namespace:Plugin.Maui.PeerVideoCall;assembly=Plugin.Maui.PeerVideoCall"
+             Title="CallPage">
+    <ScrollView>
+        <VerticalStackLayout>
+            <Grid VerticalOptions="Fill" HorizontalOptions="Fill">
+                <rtc:PeerVideoCallView x:Name="VideoCallView" HeightRequest="500"/>
+            </Grid>
+
+            <Button x:Name="Initialize_Btn" Text="Initialize" Clicked="Initialize_Btn_Clicked" />
+ 
+            <Label Text="My Peer ID: " x:Name="MyID_Label" FontAttributes="Bold" FontSize="Medium" TextColor="Red"/>
+            <Button x:Name="GetID_Btn" Text="Get My ID" Clicked="GetID_Btn_Clicked" />
+            
+            <Label Text="Enter Other Peer ID Below." FontAttributes="Bold" FontSize="Header" TextColor="Red"/>
+            <Entry x:Name="PeerID_Entry" />
+
+            <Button x:Name="AddPeer_Btn" Text="Add Peer" Clicked="AddPeer_Btn_Clicked" />
+
+            
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
