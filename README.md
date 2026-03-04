@@ -208,4 +208,5 @@ bool ArePeersThere = await VideoCallView.IsCallConnected();
 
 # Limitations
 1. For Android the minimum sdk is to be set to API 23 - Android 6
-2. For iOS the View asks for Camera and Mic permissions everytime its loaded, this is a limitation due to Apple's WebView Policies. Future versions of this package will use native webrtc libraries for iOS to stop this behaviour. But for now, this limitation persists.
+2. For iOS sometimes the View asks for Camera and Mic permissions everytime its loaded, this is a limitation due to Apple's WebView Policies. Future versions of this package will use native webrtc libraries for iOS to stop this behaviour. But for now, this limitation persists.
+3. For Windows, the View again asks the user for the camera and mic permission. Howver that occours only for the first time when the view is launched, subsequent usage doesn't ask the permissions again and again.
